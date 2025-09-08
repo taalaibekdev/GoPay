@@ -1,0 +1,9 @@
+﻿using GoPaySDK.Models;
+
+namespace GoPaySDK.Interfaces;
+
+public interface IPaymentService
+{
+    Task<BaseResponse<PaymentData>> CreatePayment(CreatePayment payment);
+    Task<BaseResponse<PaymentData>> QueryPayment(QueryPayment query);
+}

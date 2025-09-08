@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36414.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoPaySDK", "GoPaySDK\GoPaySDK.csproj", "{BC066069-A817-41A8-A4E9-B7518B3FF946}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BC066069-A817-41A8-A4E9-B7518B3FF946}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC066069-A817-41A8-A4E9-B7518B3FF946}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC066069-A817-41A8-A4E9-B7518B3FF946}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC066069-A817-41A8-A4E9-B7518B3FF946}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BCE0DCA7-7EFE-49D2-AD71-05FC3F70C74E}
+	EndGlobalSection
+EndGlobal
