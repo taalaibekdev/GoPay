@@ -2,7 +2,7 @@
 
 namespace GoPaySDK.Interfaces;
 
-public interface IPaymentService
+public interface IGoPayService
 {
     Task<BaseResponse<PaymentData>> CreatePayment(CreatePayment payment);
     Task<BaseResponse<PaymentData>> QueryPayment(QueryPayment query);

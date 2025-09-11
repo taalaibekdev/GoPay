@@ -2,6 +2,9 @@
 
 public class Variables
 {
-    public static string GoPayApiKey = string.Empty;
-    public static string GoPaySecretKey = string.Empty;
+    public const string GoPay = "GoPay";
+    public const string BaseUrl = "https://api.gopay.kg/";
+
+    public static string ApiKey = string.Empty;
+    public static string SecretKey = string.Empty;
 }

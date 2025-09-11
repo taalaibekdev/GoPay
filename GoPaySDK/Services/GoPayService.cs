@@ -2,40 +2,39 @@
 using GoPaySDK.Models;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace GoPaySDK.Services;
 
-public class PaymentService():IPaymentService
+public class GoPayService(IHttpClientFactory clientFactory) : IGoPayService
 {
-    private HttpClient _httpClient = new();
+    private readonly HttpClient _httpClient = clientFactory.CreateClient(Variables.GoPay);
 
     public async Task<BaseResponse<PaymentData>> CreatePayment(CreatePayment payment)
     {
         try
         {
-            var dataStr = JsonConvert.SerializeObject(payment, new JsonSerializerSettings
+            var json = JsonConvert.SerializeObject(payment, new JsonSerializerSettings
             {
                 Formatting = Formatting.None,
                 NullValueHandling = NullValueHandling.Ignore
             });
             var nonce = Guid.NewGuid().ToString().Replace("-","");
-            var payload = $"{nonce}\n{dataStr}\n";
+            var payload = $"{nonce}\n{json}\n";
 
-            using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(Variables.GoPaySecretKey));
+            using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(Variables.SecretKey));
             var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
             var signature = BitConverter.ToString(hashBytes).Replace("-", "").ToUpperInvariant();
 
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("gopay-api-key", Variables.GoPayApiKey);
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("gopay-nonce", nonce);
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("gopay-signature", signature);
-            
-            
-            var content = new StringContent(dataStr, new MediaTypeHeaderValue("application/json"));
-            var response = await _httpClient.PostAsync($"https://api.gopay.kg/v1/payments", content);
+            var content = new StringContent(json, new MediaTypeHeaderValue("application/json"));
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"v1/payments");
+            request.Headers.Add("gopay-nonce", nonce);
+            request.Headers.Add("gopay-signature", signature);
+            request.Content = content;
+
+            var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
             var response_content = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<BaseResponse<PaymentData>>(response_content)
@@ -53,25 +52,26 @@ public class PaymentService():IPaymentService
     {
         try
         {
-            var dataStr = JsonConvert.SerializeObject(query, new JsonSerializerSettings
+            var json = JsonConvert.SerializeObject(query, new JsonSerializerSettings
             {
                 Formatting = Formatting.None,
                 NullValueHandling = NullValueHandling.Ignore
             });
             var nonce = Guid.NewGuid().ToString().Replace("-", "");
-            var payload = $"{nonce}\n{dataStr}\n";
+            var payload = $"{nonce}\n{json}\n";
 
-            using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(Variables.GoPaySecretKey));
+            using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(Variables.SecretKey));
             var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
             var signature = BitConverter.ToString(hashBytes).Replace("-", "").ToUpperInvariant();
 
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("gopay-api-key", Variables.GoPayApiKey);
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("gopay-nonce", nonce);
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("gopay-signature", signature);
+            var content = new StringContent(json, new MediaTypeHeaderValue("application/json"));
 
-            var content = new StringContent(dataStr, new MediaTypeHeaderValue("application/json"));
-            var response = await _httpClient.PostAsync($"https://api.gopay.kg/v1/payments/query", content);
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"v1/payments/query");
+            request.Headers.Add("gopay-nonce", nonce);
+            request.Headers.Add("gopay-signature", signature);
+            request.Content = content;
+
+            var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
             var response_content = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<BaseResponse<PaymentData>>(response_content)
