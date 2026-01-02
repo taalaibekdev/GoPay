@@ -16,7 +16,7 @@ public class CreatePayment
     /// Описание платежа. Максимальная длина 255 символов.
     /// </summary>
     [MaxLength(255)]
-    public string? description { get; set; }
+    public required string? description { get; set; }
     /// <summary>
     /// Режим тестирования. Если True, платеж будет создан в режиме тестирования.
     /// </summary>
