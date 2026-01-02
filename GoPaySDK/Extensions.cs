@@ -5,13 +5,13 @@ namespace GoPaySDK;
 
 public static class Extensions
 {
-    public static string ToGoPayOrderId(this Guid id)
+    public static string AdoptToGoPay(this Guid id)
     {
         return id.ToString().Replace("-", string.Empty);
     }
     public static string CreateNonce()
     {
-        return Guid.CreateVersion7().ToString().Replace("-", string.Empty);
+        return Guid.CreateVersion7().AdoptToGoPay();
     }
     public static string GetSignature(this string payload)
     {
