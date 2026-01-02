@@ -10,23 +10,19 @@ namespace GoPaySDK.Services;
 public class GoPayService(IHttpClientFactory clientFactory) : IGoPayService
 {
     private readonly HttpClient _httpClient = clientFactory.CreateClient(Variables.GoPay);
-
-    public async Task<BaseResponse<PaymentData>> CreatePayment(CreatePayment payment)
+    private readonly JsonSerializerSettings _options = new()
+    {
+        Formatting = Formatting.None,
+        NullValueHandling = NullValueHandling.Ignore
+    };
+    public async Task<BaseResponse<PaymentData>> CreatePaymentAsync(CreatePayment payment)
     {
         try
         {
-            var json = JsonConvert.SerializeObject(payment, new JsonSerializerSettings
-            {
-                Formatting = Formatting.None,
-                NullValueHandling = NullValueHandling.Ignore
-            });
-            var nonce = Guid.NewGuid().ToString().Replace("-","");
+            var json = JsonConvert.SerializeObject(payment, _options);
+            var nonce = Extensions.CreateNonce();
             var payload = $"{nonce}\n{json}\n";
-
-            using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(Variables.SecretKey));
-            var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-            var signature = BitConverter.ToString(hashBytes).Replace("-", "").ToUpperInvariant();
-
+            var signature = payload.GetSignature();
             var content = new StringContent(json, new MediaTypeHeaderValue("application/json"));
 
             using var request = new HttpRequestMessage(HttpMethod.Post, $"v1/payments");
@@ -37,33 +33,26 @@ public class GoPayService(IHttpClientFactory clientFactory) : IGoPayService
             var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
             var response_content = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<BaseResponse<PaymentData>>(response_content)
+            var result = JsonConvert.DeserializeObject<BaseResponse<PaymentData>>(response_content, _options)
                 ?? throw new Exception("Failed to deserialize response");
 
             return result;
         }
         catch (Exception ex)
         {
-            return new("0001", "FAIL", ex.Message);
+            return new(ResponseCodes.Fail, ResponseMessages.StatusFAIL, ex.Message);
         }
     }
 
-    public async Task<BaseResponse<PaymentData>> QueryPayment(QueryPayment query)
+    public async Task<BaseResponse<PaymentData>> QueryPaymentAsync(QueryPayment query)
     {
         try
         {
-            var json = JsonConvert.SerializeObject(query, new JsonSerializerSettings
-            {
-                Formatting = Formatting.None,
-                NullValueHandling = NullValueHandling.Ignore
-            });
-            var nonce = Guid.NewGuid().ToString().Replace("-", "");
+            var json = JsonConvert.SerializeObject(query, _options);
+
+            var nonce = Extensions.CreateNonce();
             var payload = $"{nonce}\n{json}\n";
-
-            using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(Variables.SecretKey));
-            var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-            var signature = BitConverter.ToString(hashBytes).Replace("-", "").ToUpperInvariant();
-
+            var signature = payload.GetSignature();
             var content = new StringContent(json, new MediaTypeHeaderValue("application/json"));
 
             using var request = new HttpRequestMessage(HttpMethod.Post, $"v1/payments/query");
@@ -74,14 +63,14 @@ public class GoPayService(IHttpClientFactory clientFactory) : IGoPayService
             var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
             var response_content = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<BaseResponse<PaymentData>>(response_content)
+            var result = JsonConvert.DeserializeObject<BaseResponse<PaymentData>>(response_content, _options)
                 ?? throw new Exception("Failed to deserialize response");
 
             return result;
         }
         catch (Exception ex)
         {
-            return new("0001", "FAIL", ex.Message);
+            return new(ResponseCodes.Fail, ResponseMessages.StatusFAIL, ex.Message);
         }
     }
 }
