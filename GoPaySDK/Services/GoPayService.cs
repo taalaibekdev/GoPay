@@ -1,28 +1,39 @@
 ﻿using GoPaySDK.Interfaces;
 using GoPaySDK.Models;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace GoPaySDK.Services;
 
-public class GoPayService(IHttpClientFactory clientFactory) : IGoPayService
+public class GoPayService : IGoPayService
 {
-    private readonly HttpClient _httpClient = clientFactory.CreateClient(Variables.GoPay);
-    private readonly JsonSerializerSettings _options = new()
+    private readonly HttpClient _httpClient;
+    private readonly GoPayOptions _options;
+    private readonly JsonSerializerSettings _jsonSettings = new()
     {
         Formatting = Formatting.None,
         NullValueHandling = NullValueHandling.Ignore
     };
+
+    public GoPayService(HttpClient httpClient, IOptions<GoPayOptions> options)
+    {
+        _httpClient = httpClient;
+        _options = options.Value;
+
+        _httpClient.BaseAddress = new Uri(_options.BaseUrl);
+        _httpClient.DefaultRequestHeaders.TryAddWithoutValidation(
+            "gopay-api-key", _options.ApiKey);
+    }
+
     public async Task<BaseResponse<PaymentData>> CreatePaymentAsync(CreatePayment payment)
     {
         try
         {
-            var json = JsonConvert.SerializeObject(payment, _options);
+            var json = JsonConvert.SerializeObject(payment, _jsonSettings);
             var nonce = Extensions.CreateNonce();
             var payload = $"{nonce}\n{json}\n";
-            var signature = payload.GetSignature();
+            var signature = Extensions.GetSignature(payload, _options.SecretKey);
             var content = new StringContent(json, new MediaTypeHeaderValue("application/json"));
 
             using var request = new HttpRequestMessage(HttpMethod.Post, $"v1/payments");
@@ -33,7 +44,7 @@ public class GoPayService(IHttpClientFactory clientFactory) : IGoPayService
             var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
             var response_content = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<BaseResponse<PaymentData>>(response_content, _options)
+            var result = JsonConvert.DeserializeObject<BaseResponse<PaymentData>>(response_content, _jsonSettings)
                 ?? throw new Exception("Failed to deserialize response");
 
             return result;
@@ -48,11 +59,11 @@ public class GoPayService(IHttpClientFactory clientFactory) : IGoPayService
     {
         try
         {
-            var json = JsonConvert.SerializeObject(query, _options);
+            var json = JsonConvert.SerializeObject(query, _jsonSettings);
 
             var nonce = Extensions.CreateNonce();
             var payload = $"{nonce}\n{json}\n";
-            var signature = payload.GetSignature();
+            var signature = Extensions.GetSignature(payload, _options.SecretKey);
             var content = new StringContent(json, new MediaTypeHeaderValue("application/json"));
 
             using var request = new HttpRequestMessage(HttpMethod.Post, $"v1/payments/query");
@@ -63,7 +74,7 @@ public class GoPayService(IHttpClientFactory clientFactory) : IGoPayService
             var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
             var response_content = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<BaseResponse<PaymentData>>(response_content, _options)
+            var result = JsonConvert.DeserializeObject<BaseResponse<PaymentData>>(response_content, _jsonSettings)
                 ?? throw new Exception("Failed to deserialize response");
 
             return result;

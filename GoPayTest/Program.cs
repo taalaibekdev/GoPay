@@ -11,7 +11,7 @@ var _goPayService = scope.ServiceProvider.GetRequiredService<IGoPayService>();
 
 var paymentResult = await _goPayService.CreatePaymentAsync(new CreatePayment
 {
-    order_id = Guid.CreateVersion7().ToGoPayOrderId(),
+    order_id = Guid.CreateVersion7().AdoptToGoPay(),
     amount = 5,
     description = "Test Payment",
     testing_mode = true,
@@ -42,7 +42,5 @@ Host.CreateDefaultBuilder(args)
     })
     .ConfigureServices((context, services) =>
     {
-        var apiKey = context.Configuration["GoPay:ApiKey"]!;
-        var secretKey = context.Configuration["GoPay:SecretKey"]!;
-        services.AddGoPayService(apiKey, secretKey);
+        services.AddGoPayService(context.Configuration);
     });

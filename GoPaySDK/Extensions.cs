@@ -13,9 +13,9 @@ public static class Extensions
     {
         return Guid.CreateVersion7().AdoptToGoPay();
     }
-    public static string GetSignature(this string payload)
+    public static string GetSignature(string payload, string secretKey)
     {
-        using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(Variables.SecretKey));
+        using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(secretKey));
         var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
         var signature = Convert.ToHexString(hashBytes).ToUpperInvariant();
         return signature;

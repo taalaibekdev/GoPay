@@ -1,5 +1,7 @@
 ﻿using GoPaySDK.Interfaces;
+using GoPaySDK.Models;
 using GoPaySDK.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GoPaySDK;
@@ -14,20 +16,10 @@ public static class DependencyInjection
     /// <param name="apiKey">ApiKey from GoPay KG</param>
     /// <param name="secretKey">SecretKey from GoPay KG</param>
     /// <returns></returns>
-    public static IServiceCollection AddGoPayService(this IServiceCollection services, string apiKey, string secretKey)
+    public static IServiceCollection AddGoPayService(this IServiceCollection services, IConfiguration configuration)
     {
-        if(string.IsNullOrWhiteSpace(apiKey))
-            throw new ArgumentNullException(nameof(apiKey));
-        if (string.IsNullOrWhiteSpace(secretKey))
-            throw new ArgumentNullException(nameof(secretKey));
-
-        Variables.ApiKey = apiKey;
-        Variables.SecretKey = secretKey;
-        services.AddHttpClient(Variables.GoPay, httpClient =>
-        {
-            httpClient.BaseAddress = new Uri(Variables.BaseUrl);
-            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("gopay-api-key", Variables.ApiKey);
-        });
+        services.Configure<GoPayOptions>(configuration.GetSection(Variables.GoPay));
+        services.AddHttpClient();
         services.AddScoped<IGoPayService, GoPayService>();
         return services;
     }
