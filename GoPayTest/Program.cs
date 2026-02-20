@@ -9,13 +9,21 @@ using var host = CreateHostBuilder(args).Build();
 using var scope = host.Services.CreateScope();
 var _goPayService = scope.ServiceProvider.GetRequiredService<IGoPayService>();
 
+//Создание платежа
 var paymentResult = await _goPayService.CreatePaymentAsync(new CreatePayment
 {
     order_id = Guid.CreateVersion7().AdoptToGoPay(),
-    amount = 5,
+    amount = 1,
     description = "Test Payment",
     testing_mode = true,
 });
+
+//Проверка оплаты по ID платежа и ID заказа
+//var paymentResult = await _goPayService.QueryPaymentAsync(new QueryPayment()
+//{
+//    order_id = Guid.Parse("019c70ec-75bc-7ec5-ab5f-8b21f9e9b2e7").AdoptToGoPay(),
+//    payment_id = Guid.Parse("44176e59-fb4a-4d07-a696-774ade29a2c2").AdoptToGoPay()
+//});
 
 if (paymentResult.status == ResponseMessages.StatusOK)
 {
