@@ -4,7 +4,23 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+        <PackageId>GoPaySDK</PackageId>
+        <Version>1.0.1</Version>
+		<Authors>Taalaibek</Authors>
+		<Company>Taalaibek</Company>
+		<Product>GoPay SDK</Product>
+		<Description>GoPay KG SDK for .NET applications.</Description>
+		<PackageTags>gopay;payments;kg;kyrgyzstan;dotnet;aspnetcore</PackageTags>
+		<RepositoryUrl>https://github.com/taalaibekdev/GoPay</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageProjectUrl>https://github.com/taalaibekdev/GoPay</PackageProjectUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" />
