@@ -1,6 +1,8 @@
 # GoPay SDK for .NET
 
-GoPay SDK — библиотека для интеграции GoPay KG в .NET-приложения. SDK помогает создавать платежи и проверять статус платежа через `IGoPayService`.
+GoPay SDK — библиотека для интеграции [Go Pay](https://www.gopay.kg/) в .NET-приложения. SDK помогает создавать платежи и проверять статус платежа через `IGoPayService`.
+
+Официальная документация Go Pay для разработчиков доступна здесь: [https://doc.gopay.kg/v1/](https://doc.gopay.kg/v1/).
 
 ## Возможности
 
@@ -16,11 +18,31 @@ GoPay SDK — библиотека для интеграции GoPay KG в .NET-
 - `ApiKey` и `SecretKey` от GoPay KG
 - `BaseUrl` API GoPay
 
+## Полезные ссылки
+
+- Официальный сайт Go Pay: [https://www.gopay.kg/](https://www.gopay.kg/)
+- Документация для разработчиков: [https://doc.gopay.kg/v1/](https://doc.gopay.kg/v1/)
+- Личный кабинет мерчанта: [https://merchant.gopay.kg/](https://merchant.gopay.kg/)
+
 ## Установка
 
-Сейчас библиотека не опубликована в NuGet. Используйте SDK как проект внутри своего решения.
+Установите пакет из NuGet:
 
-Добавьте ссылку на проект `GoPaySDK` из вашего приложения:
+```powershell
+dotnet add package GoPaySDK
+```
+
+После этого можно подключать namespace:
+
+```csharp
+using GoPaySDK;
+using GoPaySDK.Interfaces;
+using GoPaySDK.Models;
+```
+
+### Использование через ProjectReference
+
+Если вы хотите подключить SDK напрямую из исходного кода, добавьте ссылку на проект `GoPaySDK` из вашего приложения:
 
 ```xml
 <ProjectReference Include="..\GoPaySDK\GoPaySDK.csproj" />
@@ -30,14 +52,6 @@ GoPay SDK — библиотека для интеграции GoPay KG в .NET-
 
 ```powershell
 dotnet add reference ..\GoPaySDK\GoPaySDK.csproj
-```
-
-После этого можно подключать namespace:
-
-```csharp
-using GoPaySDK;
-using GoPaySDK.Interfaces;
-using GoPaySDK.Models;
 ```
 
 ## Конфигурация
@@ -51,10 +65,12 @@ SDK читает настройки из секции `GoPay`.
   "GoPay": {
     "ApiKey": "YOUR_API_KEY",
     "SecretKey": "YOUR_SECRET_KEY",
-    "BaseUrl": "https://api.example.com/"
+    "BaseUrl": "YOUR_GOPAY_API_BASE_URL"
   }
 }
 ```
+
+Актуальный API URL и параметры интеграции смотрите в официальной документации Go Pay: [https://doc.gopay.kg/v1/](https://doc.gopay.kg/v1/).
 
 > Не храните реальные ключи в репозитории. Для локальной разработки используйте User Secrets или переменные окружения.
 
