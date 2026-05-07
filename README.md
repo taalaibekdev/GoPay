@@ -79,7 +79,7 @@ SDK читает настройки из секции `GoPay`.
 ```powershell
 dotnet user-secrets set "GoPay:ApiKey" "YOUR_API_KEY"
 dotnet user-secrets set "GoPay:SecretKey" "YOUR_SECRET_KEY"
-dotnet user-secrets set "GoPay:BaseUrl" "https://api.example.com/"
+dotnet user-secrets set "GoPay:BaseUrl" "https://api.gopay.kg/"
 ```
 
 ## Использование в ASP.NET Core
