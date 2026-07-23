@@ -1,21 +1,19 @@
-﻿using System.Text.RegularExpressions;
-
 namespace GoPaySDK.Models;
 
-public class CallbackEvent
+public class PaymentEventData
 {
     /// <summary>
     /// ID платежа в системе Go Pay.
     /// </summary>
-    public Guid payment_id { get; set; }
+    public required Guid payment_id { get; set; }
     /// <summary>
     /// ID заказа в системе мерчанта.
     /// </summary>
-    public Guid order_id { get; set; }
+    public required Guid order_id { get; set; }
     /// <summary>
     /// Сумма платежа.
     /// </summary>
-    public required string amount { get; set; }
+    public required decimal amount { get; set; }
     /// <summary>
     /// Статус платежа: COMMITTED или FAILED.
     /// </summary>

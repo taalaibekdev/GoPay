@@ -15,7 +15,7 @@ public class PaymentData
     /// </summary>
     public required decimal amount { get; set; }
     /// <summary>
-    /// Статус платежа
+    /// Статус платежа: CREATED, COMMITTED, FAILED, EXPIRED
     /// </summary>
     public required string status { get; set; }
     /// <summary>
@@ -23,9 +23,17 @@ public class PaymentData
     /// </summary>
     public string? description { get; set; }
     /// <summary>
-    /// List of payment application links.
+    /// Контактные данные покупателя для фискального чека.
     /// </summary>
-    public object? app_links { get; set; }
+    public BuyerInput? buyer { get; set; }
+    /// <summary>
+    /// Позиции фискального чека.
+    /// </summary>
+    public List<ItemInput>? items { get; set; }
+    /// <summary>
+    /// Deep links для платёжных приложений (например, {"mbank": "mbank://elqr?data=..."}).
+    /// </summary>
+    public Dictionary<string, string>? app_links { get; set; }
     /// <summary>
     /// URL страницы оплаты.
     /// </summary>
@@ -47,17 +55,21 @@ public class PaymentData
     /// </summary>
     public required string qr_url { get; set; }
     /// <summary>
-    /// Дата создания платежа.
+    /// Данные EMVCO QR для самостоятельной отрисовки. Формат: base_url#emvco_payload.
+    /// </summary>
+    public required string qr_data { get; set; }
+    /// <summary>
+    /// Дата создания платежа (UTC ISO-8601).
     /// </summary>
     public DateTime created_at { get; set; }
     /// <summary>
-    /// Срок платежа.
+    /// Срок платежа (UTC ISO-8601).
     /// </summary>
     public DateTime expires_at { get; set; }
     /// <summary>
-    /// Дата оплаты платежа.
+    /// Дата оплаты платежа (UTC ISO-8601). Null для платежей со статусом CREATED, FAILED, EXPIRED.
     /// </summary>
-    public DateTime committed_at { get; set; }
+    public DateTime? committed_at { get; set; }
     /// <summary>
     /// Дата банковского операционного дня, когда транзакция была обработана.
     /// </summary>

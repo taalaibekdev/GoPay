@@ -18,7 +18,6 @@ public class ResponseCodes
 public class Status
 {
     public const string CREATED = "CREATED";
-    public const string PENDING = "PENDING";
     public const string FAILED = "FAILED";
     public const string COMMITTED = "COMMITTED";
     public const string EXPIRED = "EXPIRED";

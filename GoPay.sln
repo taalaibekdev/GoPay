@@ -5,7 +5,7 @@ VisualStudioVersion = 18.3.11312.210 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoPaySDK", "GoPaySDK\GoPaySDK.csproj", "{BC066069-A817-41A8-A4E9-B7518B3FF946}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoPayTest", "GoPayTest\GoPayTest.csproj", "{037312C8-86E0-4DB3-9149-27641473100B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoPayExample", "GoPayExample\GoPayExample.csproj", "{037312C8-86E0-4DB3-9149-27641473100B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

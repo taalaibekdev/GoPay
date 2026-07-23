@@ -6,8 +6,12 @@ GoPay SDK — библиотека для интеграции [Go Pay](https://
 
 ## Возможности
 
-- Создание платежа в GoPay
+- Создание платежа в GoPay (динамический QR)
 - Проверка платежа по `payment_id` или `order_id`
+- Создание и запрос статических QR-кодов
+- Получение списка платёжных приложений для deep links
+- Поддержка контактных данных покупателя (buyer) для фискальных чеков
+- Поддержка позиций чека (items) с НДС для поштучной отчётности
 - Поддержка Dependency Injection
 - Настройка через `IConfiguration`
 - Подходит для ASP.NET Core и Console-приложений
@@ -132,7 +136,32 @@ public class PaymentsController : ControllerBase
             lifetime = 3600,
             callback_url = "https://your-domain.com/api/payments/callback",
             success_url = "https://your-domain.com/payment/success",
-            failure_url = "https://your-domain.com/payment/failure"
+            failure_url = "https://your-domain.com/payment/failure",
+            // Опционально: контактные данные покупателя для фискального чека
+            buyer = new BuyerInput
+            {
+                email = "customer@example.com",
+                phone = "+996555123456"
+            },
+            // Опционально: позиции чека для поштучной отчётности
+            items = new List<ItemInput>
+            {
+                new ItemInput
+                {
+                    name = "Чизкейк Нью-Йорк",
+                    price = "500.00",
+                    quantity = 2,
+                    vat_rate = "12",
+                    item_type = ItemTypeEnum.goods
+                },
+                new ItemInput
+                {
+                    name = "Доставка",
+                    price = "200.00",
+                    quantity = 1,
+                    item_type = ItemTypeEnum.service
+                }
+            }
         });
 
         if (result.status != ResponseMessages.StatusOK)
@@ -140,7 +169,17 @@ public class PaymentsController : ControllerBase
             return BadRequest(result.error_message);
         }
 
-        return Ok(result.data);
+        // Возвращаем данные платежа включая deep links для банковских приложений
+        var payment = result.data;
+        return Ok(new
+        {
+            payment.payment_id,
+            payment.order_id,
+            payment.checkout_url,
+            payment.qr_url,
+            payment.qr_data,
+            app_links = payment.app_links // Deep links: {"mbank": "mbank://...", "megapay": "megapay://..."}
+        });
     }
 }
 ```
@@ -271,6 +310,26 @@ else
 | `callback_url` | URL для callback-уведомления |
 | `success_url` | URL редиректа после успешной оплаты |
 | `failure_url` | URL редиректа после неуспешной оплаты |
+| `buyer` | Контактные данные покупателя (email/phone) для фискального чека |
+| `items` | Позиции чека для поштучной отчётности |
+
+### BuyerInput
+
+| Поле | Описание |
+| --- | --- |
+| `email` | Email покупателя для отправки чека через ГНС |
+| `phone` | Телефон покупателя в формате E.164 |
+
+### ItemInput
+
+| Поле | Описание |
+| --- | --- |
+| `name` | Наименование позиции, максимум 128 символов |
+| `price` | Цена позиции |
+| `quantity` | Количество |
+| `vat_rate` | Ставка НДС (0-12, включая дробные) |
+| `item_type` | Тип: `goods`, `service`, `work`, `other` |
+| `code` | Код товара (ФФД тег 1162) для маркированных товаров |
 
 ### QueryPayment
 
@@ -296,7 +355,108 @@ Status.EXPIRED
 Готовый пример находится в проекте:
 
 ```text
-GoPayTest/Program.cs
+GoPayExample/Program.cs
+```
+
+## Новые возможности в версии 1.1.0
+
+### Статические QR-коды
+
+Создание постоянного QR-кода для кассы:
+
+```csharp
+var qrResult = await _goPayService.CreateStaticQrAsync(new StaticQrInput
+{
+    name = "Касса №1",
+    description = "Оплата кофе и напитков",
+    amount = "250.00", // Опционально: фиксированная сумма
+    callback_url = "https://merchant.example.com/static-qr/callback"
+});
+
+if (qrResult.status == ResponseMessages.StatusOK)
+{
+    var qr = qrResult.data;
+    Console.WriteLine($"QR ID: {qr.qr_id}");
+    Console.WriteLine($"QR URL: {qr.qr_url}");
+    Console.WriteLine($"QR Data: {qr.qr_data}");
+}
+```
+
+Запрос информации о статическом QR:
+
+```csharp
+var queryResult = await _goPayService.QueryStaticQrAsync(new QueryStaticQr
+{
+    qr_id = Guid.Parse("f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4")
+});
+```
+
+### Платёжные приложения (Deep Links)
+
+Получение списка банковских приложений для открытия оплаты напрямую:
+
+```csharp
+var appsResult = await _goPayService.GetPaymentAppsAsync(new PaymentAppInput
+{
+    platform = PlatformEnum.Android // или iOS, any
+});
+
+if (appsResult.status == ResponseMessages.StatusOK)
+{
+    foreach (var app in appsResult.data)
+    {
+        // Замените {qr_data} на значение из платежа
+        var deepLink = app.url.Replace("{qr_data}", paymentQrData);
+        Console.WriteLine($"{app.name}: {deepLink}");
+    }
+}
+```
+
+### Вебхуки нового формата (events_url)
+
+GoPay рекомендует использовать новый механизм вебхуков с явным типом события:
+
+```csharp
+[HttpPost("events")]
+public IActionResult HandleEvent([FromBody] PaymentEventEnvelope envelope)
+{
+    switch (envelope.EventType)
+    {
+        case "payment.committed":
+            // Платёж успешно оплачен
+            var paymentId = envelope.data.payment_id;
+            var amount = envelope.data.amount;
+            break;
+            
+        case "payment.failed":
+            // Платёж не выполнен
+            break;
+    }
+    
+    return Ok();
+}
+```
+
+Для инвойсов и подписок:
+
+```csharp
+[HttpPost("invoice-events")]
+public IActionResult HandleInvoiceEvent([FromBody] InvoiceEventEnvelope envelope)
+{
+    switch (envelope.EventType)
+    {
+        case "invoice.created":
+            // Создан новый инвойс
+            break;
+            
+        case "invoice.paid":
+            // Инвойс оплачен
+            var subscriptionStatus = envelope.data.subscription_status;
+            break;
+    }
+    
+    return Ok();
+}
 ```
 
 ## Безопасность
