@@ -1,0 +1,43 @@
+name: Build and Publish NuGet
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  DOTNET_VERSION: '10.0.x'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Verify tag matches csproj version
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          CSPROJ_VERSION=$(grep -oP '<Version>\K[^<]+' GoPaySDK/GoPaySDK.csproj)
+          if [ "$TAG_VERSION" != "$CSPROJ_VERSION" ]; then
+            echo "Tag v$TAG_VERSION does not match csproj version $CSPROJ_VERSION"
+            exit 1
+          fi
+
+      - name: Pack
+        run: dotnet pack GoPaySDK/GoPaySDK.csproj -c Release -o artifacts
+
+      - name: Publish to NuGet
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: artifacts/*.nupkg
