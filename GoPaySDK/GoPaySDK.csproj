@@ -5,11 +5,11 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
         <PackageId>GoPaySDK</PackageId>
-        <Version>1.1.0</Version>
+        <Version>1.2.0</Version>
 		<Authors>Taalaibek</Authors>
 		<Company>Taalaibek</Company>
 		<Product>GoPay SDK</Product>
-		<Description>GoPay KG SDK for .NET applications. Supports payments, static QR codes, payment apps deep links, buyer contacts, and fiscal receipt items.</Description>
+		<Description>GoPay KG SDK for .NET applications. Supports payments, payment cancellation, static QR codes, payment apps deep links, buyer contacts, fiscal receipt items, and typed webhooks (payment, invoice, subscription).</Description>
 		<PackageTags>gopay;payments;kg;kyrgyzstan;dotnet;aspnetcore;qr;elqr</PackageTags>
 		<RepositoryUrl>https://github.com/taalaibekdev/GoPay</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>

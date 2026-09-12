@@ -21,6 +21,10 @@ public class CallbackEvent
     /// </summary>
     public required string status { get; set; }
     /// <summary>
+    /// Признак тестового платежа. true — тестовый; отсутствие поля означает боевой платёж.
+    /// </summary>
+    public bool? testing_mode { get; set; }
+    /// <summary>
     /// Дата создания платежа (UTC ISO-8601 с Z).
     /// </summary>
     public DateTime created_at { get; set; }

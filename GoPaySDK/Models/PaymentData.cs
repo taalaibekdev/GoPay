@@ -15,9 +15,13 @@ public class PaymentData
     /// </summary>
     public required decimal amount { get; set; }
     /// <summary>
-    /// Статус платежа: CREATED, COMMITTED, FAILED, EXPIRED
+    /// Статус платежа: CREATED, PENDING, COMMITTED, FAILED, EXPIRED, CANCELLED
     /// </summary>
     public required string status { get; set; }
+    /// <summary>
+    /// Признак тестового платежа. Присутствует только со значением true; отсутствие поля означает боевой платёж.
+    /// </summary>
+    public bool? testing_mode { get; set; }
     /// <summary>
     /// Описание платежа.
     /// </summary>

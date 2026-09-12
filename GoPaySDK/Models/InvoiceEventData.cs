@@ -39,6 +39,10 @@ public class InvoiceEventData
     /// </summary>
     public int? offer_id { get; set; }
     /// <summary>
+    /// Признак тестового платежа. true — тестовый; отсутствие поля означает боевой платёж.
+    /// </summary>
+    public bool? testing_mode { get; set; }
+    /// <summary>
     /// Данные клиента.
     /// </summary>
     public required EventClient client { get; set; }

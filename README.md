@@ -348,6 +348,7 @@ Status.PENDING
 Status.FAILED
 Status.COMMITTED
 Status.EXPIRED
+Status.CANCELLED
 ```
 
 ## Пример полного Console-приложения
@@ -357,6 +358,102 @@ Status.EXPIRED
 ```text
 GoPayExample/Program.cs
 ```
+
+## Новые возможности в версии 1.2.0
+
+### Отмена платежа
+
+Отмена неоплаченного платежа: QR перестаёт работать на стороне банка, платёж переходит в терминальный статус `CANCELLED`. Можно указать `payment_id` или `order_id`. Запрос идемпотентен:
+
+```csharp
+var cancelResult = await _goPayService.CancelPaymentAsync(new QueryPayment
+{
+    order_id = orderId
+});
+
+if (cancelResult.status == ResponseMessages.StatusOK)
+{
+    Console.WriteLine($"Payment status: {cancelResult.data?.status}"); // CANCELLED
+}
+```
+
+Отмена невозможна (код `0013`), если платёж уже в терминальном статусе (`COMMITTED`, `FAILED`, `EXPIRED`) или банк подтвердил оплату. Если банк недоступен — код `0015`, запрос можно повторить.
+
+### Новые статусы и события
+
+- Статус `CANCELLED` — отменён мерчантом через API или банком до оплаты
+- События `payment.expired` и `payment.cancelled` в `events_url`
+- Поле `testing_mode` в ответах и вебхуках: `true` — тестовый платёж; отсутствие поля означает боевой
+
+```csharp
+[HttpPost("events")]
+public IActionResult HandleEvent([FromBody] PaymentEventEnvelope envelope)
+{
+    switch (envelope.EventType)
+    {
+        case Events.PaymentCommitted:
+            // Платёж успешно оплачен
+            break;
+        case Events.PaymentExpired:
+            // Истёк lifetime — закройте заказ вместо бесконечного ожидания
+            break;
+        case Events.PaymentCancelled:
+            // Платёж отменён мерчантом или банком
+            break;
+    }
+    return Ok();
+}
+```
+
+### События подписок (billing)
+
+Модели `SubscriptionEventEnvelope` / `SubscriptionEventData` для событий `subscription.activated`, `subscription.paused`, `subscription.suspended`, `subscription.cancelled`, `subscription.completed`:
+
+```csharp
+[HttpPost("subscription-events")]
+public IActionResult HandleSubscriptionEvent([FromBody] SubscriptionEventEnvelope envelope)
+{
+    switch (envelope.EventType)
+    {
+        case Events.SubscriptionActivated:
+            var client = envelope.data.client;
+            break;
+        case Events.SubscriptionCancelled:
+            // Подписка отменена
+            break;
+    }
+    return Ok();
+}
+```
+
+### Проверка подписи вебхуков
+
+GoPay подписывает вебхуки (`events_url` и legacy `callback_url`) отдельным `webhook_secret` из кабинета. Используйте сырое тело запроса и заголовки `GoPay-Nonce` / `GoPay-Signature`:
+
+```csharp
+[HttpPost("events")]
+public async Task<IActionResult> HandleEvent()
+{
+    using var reader = new StreamReader(Request.Body);
+    var rawBody = await reader.ReadToEndAsync();
+
+    var nonce = Request.Headers["GoPay-Nonce"].ToString();
+    var signature = Request.Headers["GoPay-Signature"].ToString();
+
+    if (!Extensions.VerifyWebhookSignature(nonce, rawBody, signature, webhookSecret))
+    {
+        return Unauthorized();
+    }
+
+    // Подпись верна — обрабатываем событие
+    return Ok();
+}
+```
+
+### Устаревшее
+
+- Поле `testing_mode` в запросе создания платежа помечено `[Obsolete]`: режим определяется API-ключом (Test/Live). Новым интеграциям поле передавать не нужно. В ответах и вебхуках поле остаётся только как признак тестового платежа.
+- Механизм `callback_url` помечен GoPay как устаревший — новым мерчантам рекомендуется `events_url`.
 
 ## Новые возможности в версии 1.1.0
 

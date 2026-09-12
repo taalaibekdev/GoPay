@@ -121,6 +121,57 @@ public class GoPayService : IGoPayService
         }
     }
 
+    public async Task<BaseResponse<PaymentData>> CancelPaymentAsync(QueryPayment query)
+    {
+        try
+        {
+            var json = JsonConvert.SerializeObject(query, _jsonSettings);
+            var nonce = Extensions.CreateNonce();
+            var payload = $"{nonce}\n{json}\n";
+            var signature = Extensions.GetSignature(payload, _options.SecretKey);
+
+            _logger.LogDebug("Cancelling payment: OrderId={OrderId}, PaymentId={PaymentId}", query.order_id, query.payment_id);
+
+            var content = new StringContent(json, new MediaTypeHeaderValue("application/json"));
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"v1/payments/cancel");
+            request.Headers.Add("gopay-nonce", nonce);
+            request.Headers.Add("gopay-signature", signature);
+            request.Content = content;
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+            var response_content = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<BaseResponse<PaymentData>>(response_content, _jsonSettings)
+                ?? throw new JsonException("Failed to deserialize response");
+
+            if (result.status == ResponseMessages.StatusOK)
+            {
+                _logger.LogInformation("Payment cancelled successfully: {PaymentId}, Status={Status}", result.data?.payment_id, result.data?.status);
+            }
+            else
+            {
+                _logger.LogWarning("Payment cancellation failed: Code={Code}, Error={ErrorMessage}", result.code, result.error_message);
+            }
+            return result;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "HTTP error while cancelling payment");
+            return new(ResponseCodes.Fail, ResponseMessages.StatusFAIL, "GoPay API unavailable");
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "JSON error while processing cancel response");
+            return new(ResponseCodes.Fail, ResponseMessages.StatusFAIL, "Invalid response format");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while cancelling payment");
+            return new(ResponseCodes.Fail, ResponseMessages.StatusFAIL, "Internal error");
+        }
+    }
+
     public async Task<BaseResponse<StaticQrData>> CreateStaticQrAsync(StaticQrInput qr)
     {
         try

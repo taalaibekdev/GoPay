@@ -10,12 +10,12 @@ using var scope = host.Services.CreateScope();
 var _goPayService = scope.ServiceProvider.GetRequiredService<IGoPayService>();
 
 // Создание платежа с покупателем и позициями чека
+// Режим (Test/Live) определяется API-ключом из конфигурации
 var paymentResult = await _goPayService.CreatePaymentAsync(new CreatePayment
 {
     order_id = Guid.CreateVersion7().AdoptToGoPay(),
     amount = 1200.00m,
     description = "Заказ №004",
-    testing_mode = true,
     buyer = new BuyerInput
     {
         email = "customer@example.com",

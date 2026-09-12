@@ -1,9 +1,9 @@
 namespace GoPaySDK.Models;
 
-public class PaymentEventEnvelope
+public class SubscriptionEventEnvelope
 {
     /// <summary>
-    /// Тип события: payment.committed, payment.failed, payment.expired или payment.cancelled.
+    /// Тип события: subscription.activated, subscription.paused, subscription.suspended, subscription.cancelled или subscription.completed.
     /// </summary>
     [Newtonsoft.Json.JsonProperty("event")]
     public required string EventType { get; set; }
@@ -14,5 +14,5 @@ public class PaymentEventEnvelope
     /// <summary>
     /// Данные события.
     /// </summary>
-    public required PaymentEventData data { get; set; }
+    public required SubscriptionEventData data { get; set; }
 }
